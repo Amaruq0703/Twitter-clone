@@ -3,12 +3,37 @@ from django.db import IntegrityError
 from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
+from django import forms
 
-from .models import User
+from .models import *
+
+
+class NewPostForm(forms.Form):
+    new_post_text = forms.CharField(widget=forms.Textarea(attrs={
+        'placeholder' : 'Make a new post...',
+        'required' : 'True',
+        'class' : 'form-control',
+        'maxlength': '500',  
+        'rows': 2,          
+        'cols': 40
+    }), label="")
 
 
 def index(request):
-    return render(request, "network/index.html")
+    newPostForm = NewPostForm()
+
+    if request.method == 'POST':
+        post_text = request.POST.get('new_post_text')
+        user = User.objects.get(pk=request.user.id)
+
+        post = Post(user=user, content=post_text)
+        post.save()
+
+        return HttpResponseRedirect(reverse('index'))
+
+    return render(request, "network/index.html" ,{
+        'newPostForm' : newPostForm
+    })
 
 
 def login_view(request):
