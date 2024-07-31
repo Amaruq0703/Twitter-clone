@@ -31,8 +31,11 @@ def index(request):
 
         return HttpResponseRedirect(reverse('index'))
 
+    posts = Post.objects.all()
+
     return render(request, "network/index.html" ,{
-        'newPostForm' : newPostForm
+        'newPostForm' : newPostForm,
+        'posts' : posts
     })
 
 
