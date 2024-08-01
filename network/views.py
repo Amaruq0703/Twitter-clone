@@ -4,6 +4,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django.shortcuts import render
 from django.urls import reverse
 from django import forms
+from django.core.paginator import Paginator
 
 from .models import *
 
@@ -31,7 +32,11 @@ def index(request):
 
         return HttpResponseRedirect(reverse('index'))
 
-    posts = Post.objects.all()
+    posts_list = Post.objects.all().order_by('-timestamp')
+    paginator = Paginator(posts_list, 10)  # 10 posts per page
+
+    page_number = request.GET.get('page')
+    posts = paginator.get_page(page_number)
 
     return render(request, "network/index.html" ,{
         'newPostForm' : newPostForm,
@@ -40,11 +45,16 @@ def index(request):
 
 def profile(request, username):
     profile = User.objects.get(username = username)
-    posts = Post.objects.filter(user=profile)
-
     follower = User.objects.get(pk=request.user.id)
 
-    if Follower.objects.filter(user = profile, followers = follower).exists():
+    posts_list = Post.objects.all().order_by('-timestamp')
+    paginator = Paginator(posts_list, 10)  # 10 posts per page
+
+    page_number = request.GET.get('page')
+    posts = paginator.get_page(page_number)
+
+
+    if Follower.objects.filter(user = follower, followers = profile).exists():
         following = True
     
     else:
@@ -112,13 +122,29 @@ def follow(request, username):
     follow = User.objects.get(username=username)
     follower = User.objects.get(pk=request.user.id)
 
-    if Follower.objects.filter(user = follow, followers = follower).exists():
-        item = Follower.objects.filter(user = follow, followers = follower)
+    if Follower.objects.filter(user = follower, followers = follow).exists():
+        item = Follower.objects.filter(user = follower, followers = follow)
         item.delete()
     else:
-        following = Follower(user = follow, followers = follower)
+        following = Follower(user = follower, followers = follow)
         following.save()
 
     return HttpResponseRedirect(reverse("profile",kwargs={
         'username' : username
     }))
+
+def followingpage(request):
+    newPostForm = NewPostForm()
+    user = User.objects.get(pk=request.user.id)
+    peopleFollowed = Follower.objects.filter(user=user).values_list('followers', flat=True)
+    posts_list = Post.objects.filter(user__in=peopleFollowed).order_by('-timestamp')
+    
+    paginator = Paginator(posts_list, 10)  # 10 posts per page
+    page_number = request.GET.get('page')
+    posts = paginator.get_page(page_number)
+
+    return render(request, "network/following.html", {
+        'posts' : posts,
+        'newPostForm' : newPostForm
+    })
+
