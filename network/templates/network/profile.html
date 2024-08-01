@@ -1,0 +1,39 @@
+{% extends "network/layout.html" %}
+
+{% block body %}
+    
+    <div class="h4">{{profile.username}}</div>
+    <div class="row">
+        <div class="h6 col-1">Followers: {{profile.followers.count}}</div>
+        <div class="h6 col-1">Follows: {{profile.follows.count}}</div>
+    </div>
+    {% if user.is_authenticated and user.username != profile.username %}
+        {% if following %}
+            <a class="btn btn-sm btn-outline-secondary" type="button" id="followbutton" href="{% url 'follow' username=profile.username %}">Unfollow</a>
+        {% else %}
+            <a class="btn btn-sm btn-outline-secondary" type="button" id="followbutton" href="{% url 'follow' username=profile.username %}">Follow</a>
+        {% endif %}
+    {% endif %}
+    <hr>
+    <h3>Posts by {{profile.username}}:</h3>
+    {% if posts %}
+        <div class="row">
+            <div class="col-12">
+                {% for post in posts reversed %}
+                <div class="card mb-3">
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="card-text col-10">{{post.user.username}}</div>
+                            <div class="text-muted col-2">{{post.timestamp}}</div>
+                        </div>
+                        <h5 class="card-title">{{post.content}}</h5>
+                        <p class="text-muted">{{post.likes.count}}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% else %}
+        <h4>No Posts Yet</h4>
+    {% endif %}
+{% endblock %}

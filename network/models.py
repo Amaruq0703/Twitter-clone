@@ -22,3 +22,9 @@ class Like(models.Model):
     def __str__(self):
         return f'Like by {self.user.username} on post {self.post.id}'
 
+class Follower(models.Model):
+    user = models.ForeignKey(User, on_delete=models.CASCADE, related_name= 'followers')
+    followers = models.ForeignKey(User, on_delete=models.CASCADE, related_name= 'follows', null=True, blank=True)
+
+    def __str__(self):
+        return f'User {self.user.username} followed by {self.followers}'

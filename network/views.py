@@ -38,6 +38,24 @@ def index(request):
         'posts' : posts
     })
 
+def profile(request, username):
+    profile = User.objects.get(username = username)
+    posts = Post.objects.filter(user=profile)
+
+    follower = User.objects.get(pk=request.user.id)
+
+    if Follower.objects.filter(user = profile, followers = follower).exists():
+        following = True
+    
+    else:
+        following = False
+    
+    return render(request, 'network/profile.html', {
+        'profile' : profile,
+        'posts' : posts,
+        'following'  : following
+    })
+
 
 def login_view(request):
     if request.method == "POST":
@@ -89,3 +107,18 @@ def register(request):
         return HttpResponseRedirect(reverse("index"))
     else:
         return render(request, "network/register.html")
+    
+def follow(request, username):
+    follow = User.objects.get(username=username)
+    follower = User.objects.get(pk=request.user.id)
+
+    if Follower.objects.filter(user = follow, followers = follower).exists():
+        item = Follower.objects.filter(user = follow, followers = follower)
+        item.delete()
+    else:
+        following = Follower(user = follow, followers = follower)
+        following.save()
+
+    return HttpResponseRedirect(reverse("profile",kwargs={
+        'username' : username
+    }))

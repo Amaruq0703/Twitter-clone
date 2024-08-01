@@ -16,7 +16,7 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <div class="row">
-                            <div class="card-text col-10">{{post.user.username}}</div>
+                            <a href="{% url 'profile' username=post.user.username %}" class="col-10">{{post.user.username}}</a>
                             <div class="text-muted col-2">{{post.timestamp}}</div>
                         </div>
                         <h5 class="card-title">{{post.content}}</h5>
