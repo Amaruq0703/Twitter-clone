@@ -16,7 +16,12 @@
                 <div class="card mb-3">
                     <div class="card-body">
                         <div class="row">
-                            <a href="{% url 'profile' username=post.user.username %}" class="col-10">{{post.user.username}}</a>
+                            {% if post.user.username == user.username %}
+                                <a href="{% url 'profile' username=post.user.username %}" class="col-8">{{post.user.username}}</a>
+                                <a href="{% url 'edit' postId=post.id %}" class="col-2">Edit</a>
+                            {% else %}
+                                <a href="{% url 'profile' username=post.user.username %}" class="col-10">{{post.user.username}}</a>
+                            {% endif %}
                             <div class="text-muted col-2">{{post.timestamp}}</div>
                         </div>
                         <h5 class="card-title">{{post.content}}</h5>

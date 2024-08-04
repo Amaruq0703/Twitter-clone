@@ -148,3 +148,21 @@ def followingpage(request):
         'newPostForm' : newPostForm
     })
 
+def edit(request, postId):
+    
+    post = Post.objects.get(pk = postId)
+
+    if request.method == 'POST':
+        post_text = request.POST.get('new_post_text')
+        post.content = post_text
+        post.save()
+        return HttpResponseRedirect(reverse('index'))
+    
+    if request.method == 'GET':
+        
+        return render(request, 'network/edit.html', {
+            'post' : post,
+            'newpostform' : NewPostForm(initial={'new_post_text' : post.content})
+        })
+
+    
