@@ -51,8 +51,6 @@
     });
 </script>
 
-
-
     <form action="{% url 'index' %}" method="post" class="mb-3">
         <h3>New Post:</h3>
         {% csrf_token %}
@@ -85,7 +83,7 @@
                                 &#x2661;
                                 {% endif %}
                             </button>
-                            <p class="text-muted col-2" id="like-count-{{post.id}}">{{post.likes.count}}</p>
+                            <p class="text-muted col-2 mt-3" id="like-count-{{post.id}}">{{post.likes.count}}</p>
                         </div>
                     </div>
                 </div>
