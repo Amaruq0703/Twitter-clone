@@ -1,6 +1,6 @@
 from django.contrib.auth import authenticate, login, logout
 from django.db import IntegrityError
-from django.http import HttpResponse, HttpResponseRedirect
+from django.http import HttpResponse, HttpResponseRedirect, JsonResponse
 from django.shortcuts import render
 from django.urls import reverse
 from django import forms
@@ -47,7 +47,7 @@ def profile(request, username):
     profile = User.objects.get(username = username)
     follower = User.objects.get(pk=request.user.id)
 
-    posts_list = Post.objects.all().order_by('-timestamp')
+    posts_list = Post.objects.filter(user = profile).order_by('-timestamp')
     paginator = Paginator(posts_list, 10)  # 10 posts per page
 
     page_number = request.GET.get('page')
@@ -159,10 +159,26 @@ def edit(request, postId):
         return HttpResponseRedirect(reverse('index'))
     
     if request.method == 'GET':
-        
+
         return render(request, 'network/edit.html', {
             'post' : post,
             'newpostform' : NewPostForm(initial={'new_post_text' : post.content})
         })
 
-    
+def like_post(request, post_id):
+    post = Post.objects.get(pk=post_id)
+    user = User.objects.get(pk=request.user.id)
+    liked = False
+
+    try:
+        like, created = Like.objects.get_or_create(user=user, post=post)
+        if not created:
+            like.delete()
+            liked = False
+        else:
+            liked = True
+
+        likes_count = post.likes.count()
+        return JsonResponse({'success': True, 'liked': liked, 'likes_count': likes_count})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
