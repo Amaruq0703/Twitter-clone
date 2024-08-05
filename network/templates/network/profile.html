@@ -25,13 +25,22 @@
                         <div class="row">
                             {% if post.user.username == user.username %}
                                 <a href="{% url 'profile' username=post.user.username %}" class="col-8">{{post.user.username}}</a>
-                                <a href="{% url 'edit' postId=post.id %}" class="col-2">Edit</a>
+                                <button class="edit-button btn btn-primary col-2" data-post-id="{{ post.id }}" data-post-content="{{ post.content|escapejs }}">Edit</button>
                             {% else %}
                                 <a href="{% url 'profile' username=post.user.username %}" class="col-10">{{post.user.username}}</a>
                             {% endif %}
                         </div>
-                        <h5 class="card-title">{{post.content}}</h5>
-                        <p class="text-muted">{{post.likes.count}}</p>
+                        <h5 class="card-title" id="post-content-{{ post.id }}">{{ post.content }}</h5>
+                        <div class="row">
+                            <button class="like-button {% if user in post.likes.all %}liked{% else %}unliked{% endif %}" data-post-id="{{post.id}}">
+                                {% if user in post.likes.all %}
+                                &#x2764;
+                                {% else %}
+                                &#x2661;
+                                {% endif %}
+                            </button>
+                            <p class="text-muted col-2 mt-3" id="like-count-{{post.id}}">{{post.likes.count}}</p>
+                        </div>
                     </div>
                 </div>
                 {% endfor %}

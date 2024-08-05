@@ -5,6 +5,7 @@ from django.shortcuts import render
 from django.urls import reverse
 from django import forms
 from django.core.paginator import Paginator
+import json
 
 from .models import *
 
@@ -153,17 +154,18 @@ def edit(request, postId):
     post = Post.objects.get(pk = postId)
 
     if request.method == 'POST':
-        post_text = request.POST.get('new_post_text')
-        post.content = post_text
-        post.save()
-        return HttpResponseRedirect(reverse('index'))
+        try:
+            data = json.loads(request.body)
+            post_content = data.get('postContent')
+            post.content = post_content
+            post.save()
+            return JsonResponse({'success': True, 'postContent': post.content})
+        except Exception as e:
+            return JsonResponse({'success': False, 'error': str(e)}, status=400)
+        
+    return JsonResponse({'success': False, 'error': 'Invalid request method'}, status=405)
     
-    if request.method == 'GET':
-
-        return render(request, 'network/edit.html', {
-            'post' : post,
-            'newpostform' : NewPostForm(initial={'new_post_text' : post.content})
-        })
+    
 
 def like_post(request, post_id):
     post = Post.objects.get(pk=post_id)

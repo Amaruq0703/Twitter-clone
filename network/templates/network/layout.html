@@ -6,6 +6,10 @@
         <title>{% block title %}Social Network{% endblock %}</title>
         <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
         <link href="{% static 'network/styles.css' %}" rel="stylesheet">
+        <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+        <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js"></script>
+        <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/js/bootstrap.min.js"></script>
+    
         <style>
             .like-button {
                 background: none;
@@ -28,6 +32,112 @@
                 margin-right: 10px;
             }
         </style>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function() {
+                // Open modal and populate with post content
+                document.querySelectorAll(".edit-button").forEach(button => {
+                    button.onclick = function() {
+                        const postId = this.dataset.postId;
+                        const postContent = this.dataset.postContent;
+                        document.querySelector("#editPostModal #postId").value = postId;
+                        document.querySelector("#editPostModal #postContent").value = postContent;
+                        $('#editPostModal').modal('show');
+                    };
+                });
+
+                // Handle form submission
+                document.querySelector("#editPostForm").onsubmit = function(event) {
+                    event.preventDefault();
+                    const postId = document.querySelector("#editPostModal #postId").value;
+                    const postContent = document.querySelector("#editPostModal #postContent").value;
+                    fetch(`/edit/${postId}/`, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                            'X-CSRFToken': getCookie('csrftoken')
+                        },
+                        body: JSON.stringify({
+                            'postContent': postContent
+                        })
+                    })
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            document.querySelector(`#post-content-${postId}`).innerText = data.postContent;
+                            $('#editPostModal').modal('hide');
+                        } else {
+                            console.error('Error:', data.error);
+                        }
+                    })
+                    .catch(error => console.error('There was a problem with the fetch operation:', error));
+                };
+
+                function getCookie(name) {
+                    let cookieValue = null;
+                    if (document.cookie && document.cookie !== '') {
+                        const cookies = document.cookie.split(';');
+                        for (let i = 0; i < cookies.length; i++) {
+                            const cookie = cookies[i].trim();
+                            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                                break;
+                            }
+                        }
+                    }
+                    return cookieValue;
+                }
+            });
+
+            document.addEventListener('DOMContentLoaded', () => {
+                document.querySelectorAll('.like-button').forEach(button => {
+                    button.onclick = function() {
+                        const postId = this.dataset.postId;
+                        fetch(`/like/${postId}/` , {
+                            method : 'POST',
+                            headers : {
+                                'Content-Type': 'application/json',
+                                'X-CSRFToken': getCookie('csrftoken')
+                            },
+                            body : JSON.stringify({})
+                        })
+                        .then(response => response.json())
+                        .then(data => {
+                            if (data.success) {
+                                document.querySelector(`#like-count-${postId}`).innerHTML = data.likes_count
+                                if (data.liked) {
+                                    this.classList.remove('unliked');
+                                    this.classList.add('liked');
+                                    this.innerHTML = '&#x2764;';
+                                } else {
+                                    this.classList.remove('liked');
+                                    this.classList.add('unliked');
+                                    this.innerHTML = '&#x2661;'; 
+                                }
+                            }
+                        })
+                        .catch(error => {
+                            console.error('There was a problem with the fetch operation:', error)});
+                    };
+                });
+
+                function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';');
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim();
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                            break;
+                        }
+                    }
+                }
+                return cookieValue;
+                }
+            });
+            </script>
+    
     </head>
     <body>
 
@@ -38,7 +148,7 @@
               <ul class="navbar-nav mr-auto">
                 {% if user.is_authenticated %}
                     <li class="nav-item">
-                        <a class="nav-link" href="#"><strong>{{ user.username }}</strong></a>
+                        <a class="nav-link" href="{% url 'profile' username=user.username %}"><strong>{{ user.username }}</strong></a>
                     </li>
                 {% endif %}
                 <li class="nav-item">
@@ -67,5 +177,29 @@
             {% block body %}
             {% endblock %}
         </div>
+        <!-- Modal Structure -->
+        <div class="modal fade" id="editPostModal" tabindex="-1" role="dialog" aria-labelledby="editPostModalLabel" aria-hidden="true">
+            <div class="modal-dialog" role="document">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="editPostModalLabel">Edit Post</h5>
+                        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                            <span aria-hidden="true">&times;</span>
+                        </button>
+                    </div>
+                    <div class="modal-body">
+                        <form id="editPostForm">
+                            <input type="hidden" id="postId" name="postId">
+                            <div class="form-group">
+                                <label for="postContent">Content</label>
+                                <textarea class="form-control" id="postContent" name="postContent" rows="3"></textarea>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Save changes</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+
     </body>
 </html>
